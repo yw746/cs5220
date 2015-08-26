@@ -1,0 +1,110 @@
+\documentclass{scrartcl}
+\usepackage{dominatrix,listings,xcolor,geometry,pdflscape,pbox,tikz}
+\usepackage{pgfplots}
+
+\pgfplotsset{
+  every axis/.append style={font=\small},
+  compat=newest
+}
+
+\lstset{%
+  language=[LaTeX]TeX,
+  keepspaces,
+  basicstyle=\ttfamily,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  captionpos=b,
+  breaklines=true,
+  breakatwhitespace=false,
+  commentstyle=\color{magenta},
+  stringstyle=\color{cyan},
+  showstringspaces=false,
+  keywordstyle=[1]\color{blue},
+  keywordstyle=[2]\color{magenta},
+  keywordstyle=[3]\color{red},
+  escapeinside={\@}{\@}
+}
+
+\begin{document}
+  \begin{framed}
+  \large
+  CS 5220 Applications of Parallel Programming \hfill Fall 2015 \\
+  Kenneth Lim (\href{mailto:kl545@cornell.edu}{kl545}) \hfill Performance Analysis Basics \hspace{-3ex}
+  \end{framed}
+  \begin{enumerate}
+    \item Given $\alpha = 0.1$, we have:
+    \[
+      S(p) \leq \frac{1}{0.1 + 0.9/p},\quad 1<p<128
+    \]
+    % This result is shown in \autoref{fig:amdahl}, and the script used for graph generation is shown in \autoref{code:amdahl}.
+    \begin{figure}[p]
+      \centering
+      \resizebox{0.75\textwidth}{!}{%
+      \begin{tikzpicture}
+        \begin{axis}[
+          enlarge x limits=false,
+          enlarge y limits=upper,
+          ylabel=$S(p)$,
+          xlabel=Cores,
+          axis lines*=left,
+          axis on top,
+          tick align=outside
+        ]
+          \newcommand{\ALPHA}{0.1}
+          \addplot[black,domain=1:128]
+          {1/(\ALPHA + (1-\ALPHA)/x)};
+        \end{axis}
+      \end{tikzpicture}
+    }
+    \caption{Plot of idealized speedup vs. number of cores used for $p = 1$ to $p = 128$ and $\alpha = 0.1$. The graph asymtotes at $S(p) = 1/\alpha = 10$.\label{fig:amdahl}}
+    \end{figure}
+    \begin{figure}[p]
+\begin{lstlisting}
+  \begin{tikzpicture}
+    \begin{axis}[
+      enlarge x limits=false,enlarge y limits=upper,
+      xlabel=Cores,ylabel=$S(p)$,tick align=outside,
+      axis lines*=left,axis on top]
+      \newcommand{\ALPHA}{0.1}
+      \addplot[black,domain=1:128]
+      {1/(\ALPHA + (1-\ALPHA)/x)};
+    \end{axis}
+  \end{tikzpicture}
+\end{lstlisting}
+    \caption{Graph Generation Code, using \LaTeX's TikZ and PGFPlots packages\label{code:amdahl}}
+    \end{figure}
+    \item Applying Gustafson's Law, we have:
+    \[
+      T = \frac{\alpha}{\alpha + \tau}
+    \]
+    Then the speedup is simply:
+    \[
+      S(p) = p - T(p - 1)
+    \]
+    \item Tuning should be avoided when:\begin{inparaenum}[(a)]
+      \item the man hour cost of tuning exceeds the computation time saved;
+      \item it potentially converts the codebase to spaghetti \emph{al dente};
+      \item and when it does not target or significantly affect the code bottleneck.
+    \end{inparaenum}
+    \item The peak double precision FLOPS for an Intel Xeon Phi coprocessor 5110P is $1010.88\,\si{GF/\s}$\footnote{\url{https://www-ssl.intel.com/content/www/us/en/benchmarks/server/xeon-phi/xeon-phi-theoretical-maximums.html}}. where the performance is obtained by:
+    \[
+      16\,\frac{\si{FLOPS}}{\si{clock}} \times 60\,\si{cores} \times 1.053\,\si{GHz} = 1010.88\,\si{GF/\s}
+    \]
+    The peak double precision FLOPS for a single Intel E5-2620 v3 with Turbo Boost is $120\,\si{GF/\s}$\footnote{\url{http://download.intel.com/support/processors/xeon/sb/xeon_E5-2600.pdf}}. This came straight from Intel's data sheet without specifying how it is calculated, though it \emph{probably} uses only AVX2 instructions.
+
+    Since we have a total of 96 cores and 15 accelerators, the overall peak FLOPS for the system is:
+    \[
+      96(120) + 15(1010.88) = 26683.2\,\si{GF/\s} = 26.683\,\si{TF/\s}
+    \]
+    \item My machine is a Late 2013 15" Apple Retina Macbook Pro. The processor is an Intel Core i7-4850HQ with a maximum clock speed of $3.5\,\si{G\Hz}$, 4 cores, 16 vector instructions per cycle, and a 64-bit wide AVX instruction set (which works out to 1 double-precision operand). This gives:
+    \[
+      3.5 \times 4 \times 16 \times 1 = 224\,\si{GF/\s}
+    \]
+    In addition, the machine also has an integrated GPU as well as a dedicated GPU, both of which we assume can serve as accelerators. The former is an Intel Iris Pro 5200 with peak FLOPS of $832\,\si{GF/\s}$\footnote{\url{http://www.anandtech.com/show/6993/intel-iris-pro-5200-graphics-review-core-i74950hq-tested/2}}, and the latter is an NVIDIA GeForce GT 750M, with peak FLOPS of $722.7\,\si{GF/\s}$\footnote{\url{https://www.techpowerup.com/gpudb/2224/geforce-gt-750m.html}}. Thus the total theoretical peak flop rate for my machine is:
+    \[
+      224 + 832 + 722.7 = 1778.7\,\si{GF/\s} = 1.78\,\si{TF/\s}
+    \]
+  \end{enumerate}
+\end{document}
