@@ -1,12 +1,23 @@
 \documentclass{scrartcl}
 \usepackage{dominatrix}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
 \begin{document}
   \begin{framed}
   \large
   CS 5220 Applications of Parallel Programming \hfill Fall 2015 \\
-  Kenneth Lim (\href{mailto:kl545@cornell.edu}{kl545}) \hfill Performance Analysis Basics \hspace{-3ex}
+  Kenneth Lim (\href{mailto:kl545@cornell.edu}{kl545}) \hfill Introduction \hspace{-3ex}
   \end{framed}
   \begin{enumerate}
-    \item 
+    \item Let the time taken to start the process be $T_\textrm{initial}$, the time to compute the count for the $r$-th row be $T_\textrm{row,r}$, time for the instructor to collect the counts be $T_\textrm{collect}$, and the time for the instructor to sum the counts be $T_\textrm{arithmetic}$. Then a simple model is:
+    \[
+      X_1 = T_\textrm{initial} + \argmax_r\,T_\textrm{row,r} + T_\textrm{collect} + T_\textrm{arithmetic}
+    \]
+    where $r$ is the number of rows in the venue. This assumes that the rows are being counted in parallel (i.e. the bottleneck is the row which takes the longest to finish its count), and that the instructor only carries out his/her tasks after all rows have completed counting.
+    \item A single person counting will result in sequential addition of the rows:
+    \[
+      X_2 = \sum_{i=1}^r T_\textrm{row,i}
+    \]
+    There is no setup time because the single person just has to start counting, nor is there a collection time taken to collate all the results from every row. There is also no calculation time involved because one simply increments as one counts.
+    \item Solve $X_1 \leq X_2$ to maximize $r$. The intuition is that the overhead from intializing a parallel solution has to be less than the time taken to count all but the slowest row, which is the bottleneck in the parallel solution.
   \end{enumerate}
 \end{document}
