@@ -75,14 +75,11 @@
 \end{lstlisting}
     \caption{Graph Generation Code, using \LaTeX's TikZ and PGFPlots packages\label{code:amdahl}}
     \end{figure}
-    \item Applying Gustafson's Law, we have:
+    \item The total time $T$ taken to complete $k$ tasks is:
     \[
-      T = \frac{\alpha}{\alpha + \tau}
+      T = k(\tau + \alpha)
     \]
-    Then the speedup is simply:
-    \[
-      S(p) = p - T(p - 1)
-    \]
+    Since $k\alpha$ represents the serial portion of the task which does not benefit from parallelization, the throughput becomes $k/(k\alpha) = 1/\alpha$.
     \item Tuning should be avoided when:\begin{inparaenum}[(a)]
       \item the man hour cost of tuning exceeds the computation time saved;
       \item it potentially converts the codebase to spaghetti \emph{al dente};
